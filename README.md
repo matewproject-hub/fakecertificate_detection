@@ -1,6 +1,6 @@
 # Fake Certificate Detection & Verification Vault
 
-**Live Demo:** [https://your-deployed-url.com](https://your-deployed-url.com)
+**Live Demo:** https://fakecertificate-detection-1.onrender.com/
 
 ## Features
 
@@ -10,21 +10,6 @@
 - PostgreSQL backend via Supabase
 - Dockerized for easy deployment
 
-## Screenshots
-
-### 1. Backend Health Check
-![Health Check](screenshots/health_check.png)
-
-### 2. Upload Certificate
-![Upload Certificate](screenshots/upload.png)
-
-### 3. Verify Certificate
-![Verify Certificate](screenshots/verify.png)
-
-### 4. Database Table
-![Database](screenshots/db_table.png)
-
----
 
 ## How to Use
 
