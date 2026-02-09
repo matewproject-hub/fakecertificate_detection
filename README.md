@@ -1,98 +1,172 @@
-# Fake Certificate Detection System 🛡️
+Certificate Validation Vault
 
-A secure and robust system to detect fake certificates using digital hashing and QR code verification. This project ensures the authenticity of documents by storing their cryptographic hashes in a secure database.
+A backend system for registering and verifying digital certificates. It stores certificate hashes in a database and allows external systems to check certificate validity, detecting tampering if a unique certificate ID is available.
 
-## 🚀 Features
+Features
 
-- **Immutable Verification**: Uses SHA-256 hashing to create unique digital fingerprints for every certificate.
-- **QR Code Integration**: Automatically extracts and verifies metadata (Issuer ID, Certificate UID) from embedded QR codes.
-- **Tamper Detection**: Instantly detects if a certificate has been altered by even a single pixel.
-- **Dual-Layer Validation**: Checks validity through both file hash and QR code data.
-- **User-Friendly Interface**: Simple web interface for easy uploading and verification.
+Register certificates securely by storing their hash values.
 
-## 🛠️ Tech Stack
+Verify uploaded certificates:
 
-- **Backend**: FastAPI (Python)
-- **Database**: PostgreSQL / SQLite (via SQLAlchemy)
-- **Image Processing**: Pillow, pdf2image
-- **QR Decoding**: Pyzbar
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript
+VALID → exact certificate exists in the database.
 
-## 📋 Prerequisites
+TAMPERED → certificate ID exists but hash changed.
 
-Before running the project, ensure you have the following installed:
+NOT FOUND → certificate not in database.
 
-1.  **Python 3.8+**
-2.  **System Dependencies** (required for image & QR processing):
-    *   **Ubuntu/Debian**: `sudo apt-get install libzbar0 poppler-utils`
-    *   **MacOS**: `brew install zbar poppler`
-    *   **Windows**: Install [Poppler](http://blog.alivate.com.au/poppler-windows/) and add to PATH.
+Role-based access:
 
-## ⚙️ Installation
+Issuer → can upload certificates.
 
-1.  **Clone the repository**:
-    ```bash
-    git clone <repository_url>
-    cd fakecertificate_detection
-    ```
+Verifier → can verify certificates.
 
-2.  **Create a virtual environment**:
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
-    ```
+Backend-only API — easily integratable with any frontend or system.
 
-3.  **Install Python dependencies**:
-    ```bash
-    pip install -r requirements.txt
-    ```
+Uses PostgreSQL (e.g., Supabase) as storage.
 
-4.  **Configuration**:
-    Create a `.env` file in the root directory and add your database URL:
-    ```env
-    DATABASE_URL=sqlite:///./sql_app.db
-    # For PostgreSQL: DATABASE_URL=postgresql://user:password@localhost/dbname
-    ```
+Supports QR-based certificate UID extraction (optional).
 
-## 🏃‍♂️ Running the Application
+Tech Stack
 
-### 1. Start the Backend Server
-Run the FastAPI server using Uvicorn:
-```bash
-uvicorn app.main:app --reload
-```
-The API will be available at `http://127.0.0.1:8000`.
+Python 3.10+
 
-### 2. Launch the Frontend
-Simply open `frontend/index.html` in your web browser. 
-*(No separate server required for this static frontend, but you can use `python -m http.server` inside the `frontend` folder if preferred).*
+FastAPI — API backend
 
-## 🔌 API Endpoints
+SQLAlchemy — ORM
 
--   `GET /`: Health check.
--   `POST /upload`: Upload a certificate to register it.
-    -   **Input**: File (PDF/Image)
-    -   **Process**: Hashes file, extracts QR, saves to DB.
-    -   **Output**: JSON with status and extracted data.
--   `POST /verify`: Upload a certificate to verify it.
-    -   **Input**: File (PDF/Image)
-    -   **Process**: Hashes file, compares with DB.
-    -   **Output**: `VALID` or `TAMPERED / NOT FOUND`.
+PostgreSQL (Supabase recommended)
 
-## 📂 Project Structure
+Pillow + pyzbar — optional QR extraction
 
-```
-fakecertificate_detection/
-├── app/
-│   ├── database.py    # Database connection & session
-│   ├── main.py        # API routes & logic
-│   ├── models.py      # Database models (Certificate)
-│   ├── qr_utils.py    # QR code extraction logic
-│   └── utils.py       # Hashing utilities
-├── frontend/
-│   ├── index.html     # Landing page
-│   └── action.html    # Upload/Verify interface
-├── .env               # Environment variables
-├── requirements.txt   # Python dependencies
-└── README.md          # Project documentation
-```
+Uvicorn — ASGI server
+
+python-dotenv — environment variable management
+
+Installation
+
+Clone the repository:
+
+git clone https://github.com/your-username/fakecertificate_detection.git
+cd fakecertificate_detection
+
+
+Create a virtual environment:
+
+python3 -m venv venv
+source venv/bin/activate
+
+
+Install dependencies:
+
+pip install --upgrade pip
+pip install -r requirements.txt
+
+
+Create a .env file in the root directory:
+
+DATABASE_URL=postgresql://<username>:<password>@<host>:5432/<database_name>
+
+Database Setup
+
+The app uses SQLAlchemy to manage tables.
+
+Run this once to create tables:
+
+from app.database import Base, engine
+Base.metadata.create_all(bind=engine)
+
+
+Table certificates schema:
+
+Column	Type	Notes
+id	UUID	Primary key, auto-generated
+filename	String	Uploaded file name
+hash	String	SHA256 hash of certificate
+issuer_id	String	Optional from QR
+cert_uid	String	Optional unique certificate ID
+created_at	DateTime	Timestamp of upload
+API Endpoints
+1. Root
+GET /
+
+
+Response:
+
+{
+  "message": "Certificate Validation Vault Running"
+}
+
+2. Upload Certificate (Issuer only)
+POST /upload
+
+
+Form-data:
+
+file → certificate file (PDF, image, etc.)
+
+x-role → issuer (HTTP header)
+
+Response:
+
+{
+  "message": "Certificate uploaded",
+  "hash": "<hash_value>",
+  "issuer_id": "<issuer_id if QR exists>",
+  "cert_uid": "<cert_uid if QR exists>"
+}
+
+3. Verify Certificate (Verifier or Issuer)
+POST /verify
+
+
+Form-data:
+
+file → certificate file
+
+x-role → verifier or issuer (HTTP header)
+
+Response:
+
+// Case 1: VALID
+{
+  "status": "VALID",
+  "certificate_id": "<id>",
+  "filename": "<filename>"
+}
+
+// Case 2: TAMPERED
+{
+  "status": "TAMPERED",
+  "certificate_id": "<id>",
+  "filename": "<filename>"
+}
+
+// Case 3: NOT FOUND
+{
+  "status": "NOT FOUND"
+}
+
+Running Locally
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+
+Backend will be available at http://127.0.0.1:8000/
+
+Deployment (Render / Railway / Any Cloud)
+
+Add .env variables in the platform’s dashboard.
+
+Use this start command:
+
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+
+
+Ensure PORT is set by the platform.
+
+Database must be accessible from the cloud host (check Supabase IP rules if used).
+
+Integration
+
+Any frontend or external system can call /upload and /verify endpoints.
+
+The backend handles all certificate validation logic.
