@@ -11,13 +11,15 @@ from app.qr_utils import extract_qr
 # app/main.py
 from fastapi.staticfiles import StaticFiles
 
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 
 
 Base.metadata.create_all(bind=engine)
 
 app=FastAPI(title="Fake Certificate Detection")
+
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+
 
 app.add_middleware(
     CORSMiddleware,
