@@ -1,172 +1,47 @@
-Certificate Validation Vault
+# Fake Certificate Detection & Verification Vault
 
-A backend system for registering and verifying digital certificates. It stores certificate hashes in a database and allows external systems to check certificate validity, detecting tampering if a unique certificate ID is available.
+**Live Demo:** [https://your-deployed-url.com](https://your-deployed-url.com)
 
-Features
+## Features
 
-Register certificates securely by storing their hash values.
+- Register certificates (hash & QR data stored securely)
+- Verify certificates (VALID / TAMPERED / NOT FOUND)
+- QR code extraction from PDF / image
+- PostgreSQL backend via Supabase
+- Dockerized for easy deployment
 
-Verify uploaded certificates:
+## Screenshots
 
-VALID → exact certificate exists in the database.
+### 1. Backend Health Check
+![Health Check](screenshots/health_check.png)
 
-TAMPERED → certificate ID exists but hash changed.
+### 2. Upload Certificate
+![Upload Certificate](screenshots/upload.png)
 
-NOT FOUND → certificate not in database.
+### 3. Verify Certificate
+![Verify Certificate](screenshots/verify.png)
 
-Role-based access:
+### 4. Database Table
+![Database](screenshots/db_table.png)
 
-Issuer → can upload certificates.
+---
 
-Verifier → can verify certificates.
+## How to Use
 
-Backend-only API — easily integratable with any frontend or system.
+1. Upload a certificate via `/upload`  
+2. Verify a certificate via `/verify`  
 
-Uses PostgreSQL (e.g., Supabase) as storage.
+**Responses**:  
+- `VALID` → Certificate exists in database  
+- `TAMPERED` → Hash does not match any stored certificate  
+- `NOT FOUND` → Certificate not registered
 
-Supports QR-based certificate UID extraction (optional).
+---
 
-Tech Stack
+## Tech Stack
 
-Python 3.10+
-
-FastAPI — API backend
-
-SQLAlchemy — ORM
-
-PostgreSQL (Supabase recommended)
-
-Pillow + pyzbar — optional QR extraction
-
-Uvicorn — ASGI server
-
-python-dotenv — environment variable management
-
-Installation
-
-Clone the repository:
-
-git clone https://github.com/your-username/fakecertificate_detection.git
-cd fakecertificate_detection
-
-
-Create a virtual environment:
-
-python3 -m venv venv
-source venv/bin/activate
-
-
-Install dependencies:
-
-pip install --upgrade pip
-pip install -r requirements.txt
-
-
-Create a .env file in the root directory:
-
-DATABASE_URL=postgresql://<username>:<password>@<host>:5432/<database_name>
-
-Database Setup
-
-The app uses SQLAlchemy to manage tables.
-
-Run this once to create tables:
-
-from app.database import Base, engine
-Base.metadata.create_all(bind=engine)
-
-
-Table certificates schema:
-
-Column	Type	Notes
-id	UUID	Primary key, auto-generated
-filename	String	Uploaded file name
-hash	String	SHA256 hash of certificate
-issuer_id	String	Optional from QR
-cert_uid	String	Optional unique certificate ID
-created_at	DateTime	Timestamp of upload
-API Endpoints
-1. Root
-GET /
-
-
-Response:
-
-{
-  "message": "Certificate Validation Vault Running"
-}
-
-2. Upload Certificate (Issuer only)
-POST /upload
-
-
-Form-data:
-
-file → certificate file (PDF, image, etc.)
-
-x-role → issuer (HTTP header)
-
-Response:
-
-{
-  "message": "Certificate uploaded",
-  "hash": "<hash_value>",
-  "issuer_id": "<issuer_id if QR exists>",
-  "cert_uid": "<cert_uid if QR exists>"
-}
-
-3. Verify Certificate (Verifier or Issuer)
-POST /verify
-
-
-Form-data:
-
-file → certificate file
-
-x-role → verifier or issuer (HTTP header)
-
-Response:
-
-// Case 1: VALID
-{
-  "status": "VALID",
-  "certificate_id": "<id>",
-  "filename": "<filename>"
-}
-
-// Case 2: TAMPERED
-{
-  "status": "TAMPERED",
-  "certificate_id": "<id>",
-  "filename": "<filename>"
-}
-
-// Case 3: NOT FOUND
-{
-  "status": "NOT FOUND"
-}
-
-Running Locally
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
-
-Backend will be available at http://127.0.0.1:8000/
-
-Deployment (Render / Railway / Any Cloud)
-
-Add .env variables in the platform’s dashboard.
-
-Use this start command:
-
-uvicorn app.main:app --host 0.0.0.0 --port $PORT
-
-
-Ensure PORT is set by the platform.
-
-Database must be accessible from the cloud host (check Supabase IP rules if used).
-
-Integration
-
-Any frontend or external system can call /upload and /verify endpoints.
-
-The backend handles all certificate validation logic.
+- FastAPI + Uvicorn  
+- PostgreSQL (Supabase)  
+- SQLAlchemy ORM  
+- Dockerized Deployment  
+- Python libraries: pyzbar, pillow, pdf2image
