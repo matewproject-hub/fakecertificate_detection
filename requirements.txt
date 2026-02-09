@@ -5,6 +5,5 @@ psycopg2-binary
 python-dotenv
 python-multipart
 pillow
-libzbar0
 pdf2image
 poppler-utils
