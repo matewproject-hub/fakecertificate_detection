@@ -8,6 +8,10 @@ from app.database import SessionLocal,engine,Base
 from app.models import Certificate
 from app.utils import generate_hash
 from app.qr_utils import extract_qr
+# app/main.py
+from fastapi.staticfiles import StaticFiles
+
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 
 
