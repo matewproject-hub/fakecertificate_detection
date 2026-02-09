@@ -16,9 +16,11 @@ RUN pip install --upgrade pip
 # Install Python dependencies
 RUN pip install -r requirements.txt
 
-# Expose any port for documentation (optional)
+# Optional: Expose a port for documentation
 EXPOSE 8000
 
-# Start FastAPI on Render's dynamic $PORT
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $PORT"]
+# Environment variable default (Render will override)
+ENV PORT 8000
 
+# Start FastAPI using $PORT dynamically
+ENTRYPOINT ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $PORT"]
